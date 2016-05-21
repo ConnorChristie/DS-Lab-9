@@ -1,89 +1,134 @@
 package lab9.christieck;
 
+import java.util.Stack;
+
+/**
+ * A undo / redo stack, holds the previous events and undoes / redoes them
+ *
+ * @param <E> The type of the value to store
+ */
 public class UndoRedoStack<E> extends Stack<E>
 {
     private Stack undoStack;
     private Stack redoStack;
 
-    // post: constructs an empty UndoRedoStack
     public UndoRedoStack()
     {
         undoStack = new Stack();
         redoStack = new Stack();
     }
 
-    // post: pushes and returns the given value on top of the stack
+    /**
+     * Pushes and returns the given value on the top of the stack
+     *
+     * @param value The value to push
+     * @return The value at the top of the stack
+     */
     public E push(E value)
     {
         super.push(value);
+
         undoStack.push("push");
         redoStack.clear();
+
         return value;
     }
 
-    // post: pops and returns the value at the top of the stack
+    /**
+     * Pops and returns the value at the top of the stack
+     *
+     * @return The popped value
+     */
     public E pop()
     {
         E value = super.pop();
+
         undoStack.push(value);
         undoStack.push("pop");
+
         redoStack.clear();
         return value;
     }
 
-    // post: returns whether or not an undo can be done
+    /**
+     * Whether or not a undo can be done
+     *
+     * @return If a undo can be done
+     */
     public boolean canUndo()
     {
         return !undoStack.isEmpty();
     }
 
-    // pre : canUndo() (throws IllegalStateException if not)
-    // post: undoes the last stack push or pop command
-    public void undo()
+    /**
+     * Undoes the last stack push or pop command
+     */
+    public E undo()
     {
         if (!canUndo())
         {
-            throw new IllegalStateException();
+            throw new IllegalStateException("There are no operations to undo");
         }
+
         Object action = undoStack.pop();
+
         if (action.equals("push"))
         {
             E value = super.pop();
+
             redoStack.push(value);
             redoStack.push("push");
+
+            return value;
         } else
         {
             E value = (E) undoStack.pop();
+
             super.push(value);
             redoStack.push("pop");
+
+            return value;
         }
     }
 
-    // post: returns whether or not a redo can be done
+    /**
+     * Whether or not a redo can be done
+     *
+     * @return If a redo can be done
+     */
     public boolean canRedo()
     {
         return !redoStack.isEmpty();
     }
 
-    // pre : canRedo() (throws IllegalStateException if not)
-    // post: redoes the last undone operation
-    public void redo()
+    /**
+     * Redoes the last undone operation
+     */
+    public E redo()
     {
         if (!canRedo())
         {
-            throw new IllegalStateException();
+            throw new IllegalStateException("There are no operations to redo");
         }
+
         Object action = redoStack.pop();
+
         if (action.equals("push"))
         {
             E value = (E) redoStack.pop();
+
             super.push(value);
             undoStack.push("push");
+
+            return value;
         } else
         {
             E value = super.pop();
+
             undoStack.push(value);
             undoStack.push("pop");
+
+            return value;
         }
     }
 }

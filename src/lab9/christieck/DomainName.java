@@ -1,5 +1,8 @@
 package lab9.christieck;
 
+/**
+ * A class for a domain name
+ */
 public class DomainName
 {
     private String domain;

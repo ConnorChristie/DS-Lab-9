@@ -12,6 +12,9 @@ import java.io.FileNotFoundException;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
+/**
+ * The main simulator class that runs the DNS server
+ */
 public class Simulator extends JFrame
 {
     private DNS dnsServer;
@@ -189,6 +192,8 @@ public class Simulator extends JFrame
                 try
                 {
                     dnsServer.update(in.nextLine());
+
+                    updateUndoRedoButtons();
                 } catch (InputMismatchException | IllegalArgumentException ex)
                 {
                     showError(ex.getMessage());
@@ -237,6 +242,8 @@ public class Simulator extends JFrame
 
             dnsServer.add(domainAddress.getKey(), domainAddress.getValue());
 
+            updateUndoRedoButtons();
+
             showMessage("Success", "Successfully added the DNS record");
         } catch (IllegalArgumentException ex)
         {
@@ -256,6 +263,8 @@ public class Simulator extends JFrame
             Pair<DomainName, IPAddress> domainAddress = getDomainAddressEntry();
 
             boolean success = dnsServer.delete(domainAddress.getKey(), domainAddress.getValue());
+
+            updateUndoRedoButtons();
 
             if (success)
             {
@@ -277,7 +286,17 @@ public class Simulator extends JFrame
      */
     private void onUndoButtonClick(ActionEvent e)
     {
+        try
+        {
+            dnsServer.undo();
 
+            updateUndoRedoButtons();
+
+            showMessage("Success", "Undo successful for the previous command");
+        } catch (IllegalStateException ex)
+        {
+            showError(ex.getMessage());
+        }
     }
 
     /**
@@ -287,7 +306,39 @@ public class Simulator extends JFrame
      */
     private void onRedoButtonClick(ActionEvent e)
     {
+        try
+        {
+            dnsServer.redo();
 
+            updateUndoRedoButtons();
+
+            showMessage("Success", "Redo successful for the previously undone command");
+        } catch (IllegalStateException ex)
+        {
+            showError(ex.getMessage());
+        }
+    }
+
+    /**
+     * Updates the undo and redo buttons
+     */
+    private void updateUndoRedoButtons()
+    {
+        if (dnsServer.canUndo())
+        {
+            undoButton.setEnabled(true);
+        } else
+        {
+            undoButton.setEnabled(false);
+        }
+
+        if (dnsServer.canRedo())
+        {
+            redoButton.setEnabled(true);
+        } else
+        {
+            redoButton.setEnabled(false);
+        }
     }
 
     /**
@@ -306,8 +357,8 @@ public class Simulator extends JFrame
 
         addButton.setEnabled(started);
         deleteButton.setEnabled(started);
-        undoButton.setEnabled(started);
-        redoButton.setEnabled(started);
+
+        updateUndoRedoButtons();
     }
 
     /**

@@ -2,6 +2,9 @@ package lab9.christieck;
 
 import sun.net.util.IPAddressUtil;
 
+/**
+ * A class for an IP address
+ */
 public class IPAddress
 {
     private String address;

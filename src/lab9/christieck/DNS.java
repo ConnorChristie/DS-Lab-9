@@ -3,12 +3,15 @@ package lab9.christieck;
 import java.io.*;
 import java.util.*;
 
+/**
+ * The actual DNS server that handles the storing and looking up of DNS records
+ */
 public class DNS
 {
     private File storageFile;
 
-    private Stack<DNSEvent> dnsEvents;
-    private Map<DomainName, IPAddress> dnsMap;
+    private static Map<DomainName, IPAddress> dnsMap;
+    private static UndoRedoStack<DNSEvent> dnsEvents;
 
     private boolean isStarted = false;
 
@@ -16,7 +19,7 @@ public class DNS
     {
         storageFile = new File(fileName);
 
-        dnsEvents = new Stack<>();
+        dnsEvents = new UndoRedoStack<>();
         dnsMap = new HashMap<>();
     }
 
@@ -116,7 +119,7 @@ public class DNS
             IPAddress address = new IPAddress(vars[1]);
             DomainName domain = new DomainName(vars[2]);
 
-            return update(eventType.getEvent(domain, address));
+            return update(eventType.getEvent(domain, address), false);
         }
 
         return null;
@@ -128,14 +131,14 @@ public class DNS
      * @param event The event to perform
      * @return The IP address of the record
      */
-    public IPAddress update(DNSEvent event)
+    public IPAddress update(DNSEvent event, boolean isModification)
     {
         DomainName domain = event.getDomain();
         IPAddress address = event.getAddress();
 
         if (event.getType() == DNSEventType.ADD)
         {
-            dnsEvents.push(event);
+            if (!isModification) dnsEvents.push(event);
 
             return dnsMap.put(domain, address);
         }
@@ -148,7 +151,7 @@ public class DNS
             {
                 if (address.equals(foundAddress))
                 {
-                    dnsEvents.push(event);
+                    if (!isModification) dnsEvents.push(event);
 
                     return dnsMap.remove(domain);
                 }
@@ -168,7 +171,7 @@ public class DNS
      */
     public void add(DomainName domain, IPAddress ipAddress)
     {
-        update(DNSEventType.ADD.getEvent(domain, ipAddress));
+        update(DNSEventType.ADD.getEvent(domain, ipAddress), false);
     }
 
     /**
@@ -179,19 +182,47 @@ public class DNS
      */
     public boolean delete(DomainName domain, IPAddress address)
     {
-        return update(DNSEventType.DELETE.getEvent(domain, address)) != null;
+        return update(DNSEventType.DELETE.getEvent(domain, address), false) != null;
     }
 
+    /**
+     * Gets the last event and executes the inverse of it to undo it
+     */
     public void undo()
     {
-        DNSEvent inverse = dnsEvents.pop().getInverse();
+        DNSEvent inverse = dnsEvents.undo().getInverse();
 
-        update(inverse);
+        update(inverse, true);
     }
 
+    /**
+     * Gets the last undone event and redoes it
+     */
     public void redo()
     {
+        DNSEvent event = dnsEvents.redo();
 
+        update(event, true);
+    }
+
+    /**
+     * Whether there are any events that can be undone
+     *
+     * @return If there are any events able to be undone
+     */
+    public boolean canUndo()
+    {
+        return isStarted && dnsEvents.canUndo();
+    }
+
+    /**
+     * Whether there are any events that can be redone
+     *
+     * @return If there are any events able to be redone
+     */
+    public boolean canRedo()
+    {
+        return isStarted &&dnsEvents.canRedo();
     }
 
     /**
