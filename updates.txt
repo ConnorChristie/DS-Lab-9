@@ -1,0 +1,5 @@
+ADD 127.0.0.1 localhost
+ADD	127.0.0.1	just.me
+ADD 185.13.17.221 just.me
+DEL     127.0.0.1       just.me
+DEL	185.13.17.221	just.me

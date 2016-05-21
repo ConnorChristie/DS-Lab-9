@@ -13,6 +13,11 @@ public class DomainName
         this.domain = domain.toLowerCase();
     }
 
+    /**
+     * Validates the domain name
+     *
+     * @param domain The domain name to validate
+     */
     private static void validateDomainName(String domain)
     {
         if (domain.length() > 253)
@@ -36,6 +41,30 @@ public class DomainName
         }
     }
 
+    /**
+     * Checks whether the specified domain name is equal
+     *
+     * @param domain The domain to check
+     * @return Whether they are equal
+     */
+    @Override
+    public boolean equals(Object domain)
+    {
+        if (domain instanceof DomainName)
+        {
+            return toString().equalsIgnoreCase(domain.toString());
+        }
+
+        return false;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return domain.hashCode();
+    }
+
+    @Override
     public String toString()
     {
         return domain;
